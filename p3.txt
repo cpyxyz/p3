@@ -1,0 +1,65 @@
+create table panel (pvmodule varchar(4) primary key, capacity int(4), price int(8), ptype varchar(10));
+create table vendor (tin varchar(4) primary key,name varchar(10), vaddr varchar(10), contact Bigint(10));
+create table user (building_no varchar(4) primary key, name varchar(10), address varchar(10));
+create table sell (tin varchar(4), pvmodule varchar(4), foreign key(tin) references vendor(tin), foreign key(pvmodule) references panel(pvmodule), primary key(tin,pvmodule));
+create table purchase (building_no varchar(4), pvmodule varchar(4), foreign key (building_no) references user(building_no), foreign key(pvmodule) references panel(pvmodule), primary key(building_no, pvmodule));
+create table install (tin varchar(4), pvmodule varchar(4), building_no varchar(4), idate date, iprice int(8), itype varchar(15), foreign key (tin) references vendor(tin), foreign key(pvmodule) references panel(pvmodule), foreign key(building_no) references user(building_no), primary key(tin, pvmodule, building_no));
+
+
+
+insert into vendor values('t01', 'sun solar', 'bengaluru', 9447748282);
+insert into vendor values('t02', 'moon solar', 'mumbai', 9447748333);
+insert into vendor values('t03', 'soon solar', 'delhi', 9447333333);
+ 
+insert into user values('b01', 'ramesh', 'bengaluru');
+insert into user values('b02', 'suresh', 'mumbai');
+insert into user values('b03', 'raju', 'delhi');
+ 
+insert into panel values('p01', 20, 40000, 'mono');
+insert into panel values('p02', 40, 60000, 'poly');
+insert into panel values('p03', 20, 40000, 'mono');
+ 
+insert into sell values('t01', 'p01');
+insert into sell values('t02', 'p02');
+insert into sell values('t03', 'p03');
+
+insert into purchase values('b01', 'p01');
+insert into purchase values('b01', 'p02');
+insert into purchase values('b02', 'p03');
+
+insert into install values('t01', 'p01', 'b01', '2020-10-10', 10000, 'domestic');
+insert into install values('t01', 'p02', 'b01', '2018-10-10', 20000, 'commercial');
+insert into install values('t02', 'p03', 'b03', '2018-11-11', 10000, 'domestic');
+insert into install values('t01', 'p03', 'b01', '2018-10-10', 20000, 'domestic');
+
+
+
+
+
+
+
+
+
+
+
+
+3.1
+select v.tin, count(i.tin) from vendor v, install i where v.tin = i.tin and i.itype = 'domestic' group by v.tin order by count(v.tin) desc limit 1;
+
+3.2
+select u.address, sum(p.capacity) from user u, panel p, install i where i.pvmodule = p.pvmodule and i.building_no = u.building_no group by u.address order by sum(p.capacity) desc limit 1;
+
+3.3
+select u.address from user u, panel p, install i where i.pvmodule = p.pvmodule and i.building_no = u.building_no and p.ptype = 'mono' group by u.address;
+
+3.4
+select u.address, sum(i.iprice) from user u, install i, panel p where i.pvmodule = p.pvmodule and u.building_no = i.building_no and u.address in (select u.address from user u, install i, panel p where i.pvmodule = p.pvmodule and u.building_no = i.building_no and p.ptype = 'mono') and u.address in (select u.address from user u, install i, panel p where i.pvmodule = p.pvmodule and u.building_no = i.building_no and p.ptype = 'poly') group by u.address;
+
+3.5
+select v.*, p.*, i.idate from vendor v, install i, panel p where i.tin = v.tin and i.pvmodule = p.pvmodule and i.idate in(select min(idate) from install);
+
+3.6
+select p.itype, avg(p.iprice) from ( select i.* from install i, panel p where i.pvmodule = p.pvmodule and i.itype = 'commercial') as p group by p.itype;
+
+
+
